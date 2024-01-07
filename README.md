@@ -1,1 +1,3 @@
-# My neovim config!
+# My neovim config (* ^ ω ^)
+
+Configured with LazyVim!
