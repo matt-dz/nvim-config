@@ -174,19 +174,12 @@ return {
 			on_attach = on_attach,
 		})
 
-		-- -- configure efm-langserver
-		-- lspconfig["efm"].setup({
-		--     capabilities = capabilities,
-		--     on_attach = on_attach,
-		--     init_options = {documentFormatting = true},
-		--     settings = {
-		--         rootMarkers = {".git/"},
-		--         languages = {
-		--             lua = {
-		--                  {formatCommand = "lua-format -i", formatStdin = true}
-		--             }
-		-- 	}
-		-- }
-		-- })
+		lspconfig["rust_analyzer"].setup({
+			capabilities = capabilities,
+			on_attach = function(client, bufnr)
+				on_attach(client, bufnr)
+				-- vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+			end,
+		})
 	end,
 }
