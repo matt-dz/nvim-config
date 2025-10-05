@@ -1,3 +1,20 @@
+-- Run goimports before saving a Go file
+vim.api.nvim_create_autocmd("BufWritePre", {
+	pattern = "*.go",
+	callback = function()
+		-- Save cursor and view position
+		local pos = vim.fn.getpos(".")
+		local winview = vim.fn.winsaveview()
+
+		-- Run goimports
+		vim.cmd("silent! undojoin | silent! %!goimports")
+
+		-- Restore cursor and view
+		vim.fn.setpos(".", pos)
+		vim.fn.winrestview(winview)
+	end,
+})
+
 return {
 	"neovim/nvim-lspconfig",
 	event = { "BufReadPre", "BufNewFile" },
