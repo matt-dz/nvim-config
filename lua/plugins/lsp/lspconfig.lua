@@ -163,6 +163,16 @@ return {
 		vim.lsp.config("gopls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
+			settings = {
+				gopls = {
+					analyses = {
+						unusedparams = true,
+					},
+					staticcheck = true,
+					gofumpt = true,
+
+				}
+			}
 		})
 
 		vim.lsp.config("rust_analyzer", {
