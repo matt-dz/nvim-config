@@ -172,5 +172,22 @@ return {
 				-- vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
 			end,
 		})
+
+		vim.lsp.config("yamlls", {
+			capabilities = capabilities,
+			on_attach = on_attach,
+			settings = {
+				redhat = {
+					telemetry = {
+						enabled = false
+					}
+				},
+				yaml = {
+					format = {
+						enable = true
+					}
+				}
+			}
+		})
 	end,
 }
