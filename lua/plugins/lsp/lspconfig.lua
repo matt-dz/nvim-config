@@ -6,9 +6,6 @@ return {
 		{ "antosha417/nvim-lsp-file-operations", config = true },
 	},
 	config = function()
-		-- import lspconfig plugin
-		local lspconfig = require("lspconfig")
-
 		-- import cmp-nvim-lsp plugin
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
@@ -77,25 +74,25 @@ return {
 		end
 
 		-- configure html server
-		lspconfig["html"].setup({
+		vim.lsp.config("html", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
 		-- configure typescript server with plugin
-		lspconfig["ts_ls"].setup({
+		vim.lsp.config("ts_ls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
 		-- configure css server
-		lspconfig["cssls"].setup({
+		vim.lsp.config("cssls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
 		-- configure svelte server
-		lspconfig["svelte"].setup({
+		vim.lsp.config("svelte", {
 			capabilities = capabilities,
 			on_attach = function(client, bufnr)
 				on_attach(client, bufnr)
@@ -112,7 +109,7 @@ return {
 		})
 
 		-- configure emmet language server
-		lspconfig["emmet_ls"].setup({
+		vim.lsp.config("emmet_ls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 			filetypes = {
@@ -128,13 +125,13 @@ return {
 		})
 
 		-- configure python server
-		lspconfig["pyright"].setup({
+		vim.lsp.config("pyright", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
 		-- configure lua server (with special settings)
-		lspconfig["lua_ls"].setup({
+		vim.lsp.config("lua_ls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 			settings = { -- custom settings for lua
@@ -158,23 +155,17 @@ return {
 		-- 	on_attach = on_attach,
 		-- })
 
-		-- configure julia
-		lspconfig["julials"].setup({
+		vim.lsp.config("prismals", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
-		lspconfig["prismals"].setup({
+		vim.lsp.config("gopls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
-		lspconfig["gopls"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-		})
-
-		lspconfig["rust_analyzer"].setup({
+		vim.lsp.config("rust_analyzer", {
 			capabilities = capabilities,
 			on_attach = function(client, bufnr)
 				on_attach(client, bufnr)
