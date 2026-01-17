@@ -1,14 +1,25 @@
 vim.api.nvim_create_autocmd("BufWritePre", {
 	pattern = "*.go",
 	callback = function()
-		-- Save cursor and view position
 		local pos = vim.fn.getpos(".")
 		local winview = vim.fn.winsaveview()
 
-		-- Run goimports
-		vim.cmd("silent! undojoin | silent! %!goimports")
+		-- Get buffer contents and run goimports
+		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+		local input = table.concat(lines, "\n")
+		local output = vim.fn.system("goimports", input)
 
-		-- Restore cursor and view
+		-- Only apply changes if goimports succeeded (no parse errors)
+		if vim.v.shell_error == 0 then
+			vim.cmd("silent! undojoin")
+			local new_lines = vim.split(output, "\n", { trimempty = false })
+			-- Remove trailing empty line that vim.split adds
+			if new_lines[#new_lines] == "" then
+				table.remove(new_lines)
+			end
+			vim.api.nvim_buf_set_lines(0, 0, -1, false, new_lines)
+		end
+
 		vim.fn.setpos(".", pos)
 		vim.fn.winrestview(winview)
 	end,
