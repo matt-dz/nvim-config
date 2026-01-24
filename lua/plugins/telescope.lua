@@ -32,15 +32,21 @@ return {
 		local keymap = vim.keymap
 
 		keymap.set("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Fuzzy find recent files" })
-		keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Find string under cursor in cwd" })
+
 		keymap.set("n", "<leader>fs", function()
-			builtin.live_grep({ hidden = true })
-		end, { desc = "Live grep a string in cwd" })
-		keymap.set("n", "<leader>fa", function()
-			builtin.live_grep({ no_ignore = true, hidden = true })
-		end, { desc = "Live grep a string in cwd including ignored files" })
+			builtin.live_grep({ no_ignore = false, hidden = true })
+		end, { desc = "Live grep a string in cwd " })
+
 		keymap.set("n", "<leader>ff", function()
+			builtin.find_files({ no_ignore = false, hidden = false })
+		end, { desc = "Fuzzy find files in cwd - respects .gitignore" })
+
+		keymap.set("n", "<leader>fi", function()
+			builtin.find_files({ no_ignore = false, hidden = true })
+		end, { desc = "Fuzzy find files in cwd - includes ignored files" })
+
+		keymap.set("n", "<leader>fa", function()
 			builtin.find_files({ no_ignore = true, hidden = true })
-		end, { desc = "Fuzzy find files in cwd" })
+		end, { desc = "Fuzzy find all files in cwd" })
 	end,
 }
