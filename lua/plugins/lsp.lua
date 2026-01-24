@@ -66,6 +66,8 @@ return {
 					"julials",
 					"yamlls",
 					"gopls",
+					"tailwindcss",
+					"eslint"
 				},
 				-- auto-install configured servers (with lspconfig)
 				automatic_installation = true, -- not the same as ensure_installed
@@ -75,10 +77,7 @@ return {
 				ensure_installed = {
 					"prettier", -- prettier formatter
 					"stylua", -- lua formatter
-					-- "isort", -- python formatter
 					"black", -- python formatter
-					-- "pylint", -- python linter
-					"eslint_d", -- js linter
 				},
 			})
 		end,
@@ -179,17 +178,52 @@ return {
 			-- configure svelte server
 			vim.lsp.config("svelte", {
 				capabilities = capabilities,
-				on_attach = function(client, bufnr)
-					on_attach(client, bufnr)
+				cmd = { 'svelteserver', '--stdio' },
+				filetypes = { 'svelte' },
+				root_dir = function(bufnr, on_dir)
+					local fname = vim.api.nvim_buf_get_name(bufnr)
+					-- Svelte LSP only supports file:// schema.
+					-- https://github.com/sveltejs/language-tools/issues/2777
+					if vim.uv.fs_stat(fname) ~= nil then
+						local root_markers = {
+							'package-lock.json',
+							'yarn.lock',
+							'pnpm-lock.yaml',
+							'bun.lockb',
+							'bun.lock',
+							'deno.lock'
+						}
 
-					vim.api.nvim_create_autocmd("BufWritePost", {
-						pattern = { "*.js", "*.ts" },
+						if vim.fn.has('nvim-0.11.3') == 1 then
+							root_markers = { root_markers, { '.git' } }
+						else
+							root_markers = vim.list_extend(root_markers, { '.git' })
+						end
+
+						-- We fallback to the current working directory if no project root is found
+						local project_root = vim.fs.root(bufnr, root_markers) or vim.fn.getcwd()
+						on_dir(project_root)
+					end
+				end,
+				on_attach = function(client, bufnr)
+					-- Workaround to trigger reloading JS/TS files
+					-- See https://github.com/sveltejs/language-tools/issues/2008
+					vim.api.nvim_create_autocmd('BufWritePost', {
+						pattern = { '*.js', '*.ts' },
+						group = vim.api.nvim_create_augroup('lspconfig.svelte', {}),
 						callback = function(ctx)
-							if client.name == "svelte" then
-								client.notify("$/onDidChangeTsOrJsFile", { uri = ctx.file })
-							end
+							-- internal API to sync changes that have not yet been saved to the file system
+							---@diagnostic disable-next-line: param-type-mismatch
+							client:notify('$/onDidChangeTsOrJsFile', { uri = ctx.match })
 						end,
 					})
+					vim.api.nvim_buf_create_user_command(bufnr, 'LspMigrateToSvelte5', function()
+						client:exec_cmd({
+							title = 'Migrate Component to Svelte 5 Syntax',
+							command = 'migrate_to_svelte_5',
+							arguments = { vim.uri_from_bufnr(bufnr) },
+						})
+					end, { desc = 'Migrate Component to Svelte 5 Syntax' })
 				end,
 			})
 
@@ -235,10 +269,10 @@ return {
 			})
 
 			-- configure c++ server
-			-- lspconfig["clangd"].setup({
-			-- 	capabilities = capabilities,
-			-- 	on_attach = on_attach,
-			-- })
+			vim.lsp.config("clangd", {
+				capabilities = capabilities,
+				on_attach = on_attach,
+			})
 
 			vim.lsp.config("prismals", {
 				capabilities = capabilities,
@@ -284,7 +318,297 @@ return {
 					}
 				}
 			})
+
+
+			local util = require('lspconfig.util')
+
+			vim.lsp.config("tailwindcss", {
+				cmd = { 'tailwindcss-language-server', '--stdio' },
+				-- filetypes copied and adjusted from tailwindcss-intellisense
+				filetypes = {
+					-- html
+					'aspnetcorerazor', 'astro', 'astro-markdown', 'blade',
+					'clojure', 'django-html', 'htmldjango', 'edge',
+					'eelixir', 'elixir', 'ejs', 'erb',
+					'eruby', 'gohtml', 'gohtmltmpl', 'haml',
+					'handlebars', 'hbs', 'html', 'htmlangular',
+					'html-eex', 'heex', 'jade', 'leaf',
+					'liquid', 'markdown', 'mdx', 'mustache',
+					'njk', 'nunjucks', 'php', 'razor',
+					'slim', 'twig',
+					-- css
+					'css', 'less', 'postcss', 'sass',
+					'scss', 'stylus', 'sugarss',
+					-- js
+					'javascript', 'javascriptreact', 'reason',
+					'rescript', 'typescript', 'typescriptreact',
+					-- mixed
+					'vue', 'svelte', 'templ',
+				},
+				capabilities = {
+					workspace = {
+						didChangeWatchedFiles = {
+							dynamicRegistration = true,
+						},
+					},
+				},
+				settings = {
+					tailwindCSS = {
+						validate = true,
+						lint = {
+							cssConflict = 'warning',
+							invalidApply = 'error',
+							invalidScreen = 'error',
+							invalidVariant = 'error',
+							invalidConfigPath = 'error',
+							invalidTailwindDirective = 'error',
+							recommendedVariantOrder = 'warning',
+						},
+						classAttributes = {
+							'class',
+							'className',
+							'class:list',
+							'classList',
+							'ngClass',
+						},
+						includeLanguages = {
+							eelixir = 'html-eex',
+							elixir = 'phoenix-heex',
+							eruby = 'erb',
+							heex = 'phoenix-heex',
+							htmlangular = 'html',
+							templ = 'html',
+						},
+					},
+				},
+				before_init = function(_, config)
+					if not config.settings then
+						config.settings = {}
+					end
+					if not config.settings.editor then
+						config.settings.editor = {}
+					end
+					if not config.settings.editor.tabSize then
+						config.settings.editor.tabSize = vim.lsp.util.get_effective_tabstop()
+					end
+				end,
+				workspace_required = true,
+				root_dir = function(bufnr, on_dir)
+					local root_files = {
+						-- Generic
+						'tailwind.config.js',
+						'tailwind.config.cjs',
+						'tailwind.config.mjs',
+						'tailwind.config.ts',
+						'postcss.config.js',
+						'postcss.config.cjs',
+						'postcss.config.mjs',
+						'postcss.config.ts',
+						-- Django
+						'theme/static_src/tailwind.config.js',
+						'theme/static_src/tailwind.config.cjs',
+						'theme/static_src/tailwind.config.mjs',
+						'theme/static_src/tailwind.config.ts',
+						'theme/static_src/postcss.config.js',
+						-- Fallback for tailwind v4, where tailwind.config.* is not required anymore
+						'.git',
+					}
+					local fname = vim.api.nvim_buf_get_name(bufnr)
+					root_files = util.insert_package_json(root_files, 'tailwindcss', fname)
+					root_files = util.root_markers_with_field(root_files, { 'mix.lock', 'Gemfile.lock' }, 'tailwind', fname)
+					on_dir(vim.fs.dirname(vim.fs.find(root_files, { path = fname, upward = true })[1]))
+				end
+			})
+
+
+			local eslint_config_files = {
+				'.eslintrc',
+				'.eslintrc.js',
+				'.eslintrc.cjs',
+				'.eslintrc.yaml',
+				'.eslintrc.yml',
+				'.eslintrc.json',
+				'eslint.config.js',
+				'eslint.config.mjs',
+				'eslint.config.cjs',
+				'eslint.config.ts',
+				'eslint.config.mts',
+				'eslint.config.cts',
+			}
+
+			vim.lsp.config("eslint", {
+				cmd = { 'vscode-eslint-language-server', '--stdio' },
+				filetypes = {
+					'javascript',
+					'javascriptreact',
+					'javascript.jsx',
+					'typescript',
+					'typescriptreact',
+					'typescript.tsx',
+					'vue',
+					'svelte',
+					'astro',
+					'htmlangular',
+				},
+				workspace_required = true,
+				on_attach = function(client, bufnr)
+					vim.api.nvim_buf_create_user_command(bufnr, 'LspEslintFixAll', function()
+						client:request_sync('workspace/executeCommand', {
+							command = 'eslint.applyAllFixes',
+							arguments = {
+								{
+									uri = vim.uri_from_bufnr(bufnr),
+									version = vim.lsp.util.buf_versions[bufnr],
+								},
+							},
+						}, nil, bufnr)
+					end, {})
+				end,
+				root_dir = function(bufnr, on_dir)
+					-- The project root is where the LSP can be started from
+					-- As stated in the documentation above, this LSP supports monorepos and simple projects.
+					-- We select then from the project root, which is identified by the presence of a package
+					-- manager lock file.
+					local root_markers = { 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb', 'bun.lock' }
+					-- Give the root markers equal priority by wrapping them in a table
+					root_markers = vim.fn.has('nvim-0.11.3') == 1 and { root_markers, { '.git' } }
+							or vim.list_extend(root_markers, { '.git' })
+
+					-- exclude deno
+					if vim.fs.root(bufnr, { 'deno.json', 'deno.jsonc', 'deno.lock' }) then
+						return
+					end
+
+					-- We fallback to the current working directory if no project root is found
+					local project_root = vim.fs.root(bufnr, root_markers) or vim.fn.getcwd()
+
+					-- We know that the buffer is using ESLint if it has a config file
+					-- in its directory tree.
+					--
+					-- Eslint used to support package.json files as config files, but it doesn't anymore.
+					-- We keep this for backward compatibility.
+					local filename = vim.api.nvim_buf_get_name(bufnr)
+					local eslint_config_files_with_package_json =
+							util.insert_package_json(eslint_config_files, 'eslintConfig', filename)
+					local is_buffer_using_eslint = vim.fs.find(eslint_config_files_with_package_json, {
+						path = filename,
+						type = 'file',
+						limit = 1,
+						upward = true,
+						stop = vim.fs.dirname(project_root),
+					})[1]
+					if not is_buffer_using_eslint then
+						return
+					end
+
+					on_dir(project_root)
+				end,
+				-- Refer to https://github.com/Microsoft/vscode-eslint#settings-options for documentation.
+				settings = {
+					validate = 'on',
+					---@diagnostic disable-next-line: assign-type-mismatch
+					packageManager = nil,
+					useESLintClass = false,
+					experimental = {
+						useFlatConfig = false,
+					},
+					codeActionOnSave = {
+						enable = false,
+						mode = 'all',
+					},
+					format = true,
+					quiet = false,
+					onIgnoredFiles = 'off',
+					rulesCustomizations = {},
+					run = 'onType',
+					problems = {
+						shortenToSingleLine = false,
+					},
+					-- nodePath configures the directory in which the eslint server should start its node_modules resolution.
+					-- This path is relative to the workspace folder (root dir) of the server instance.
+					nodePath = '',
+					-- use the workspace folder location or the file location (if no workspace folder is open) as the working directory
+					workingDirectory = { mode = 'auto' },
+					codeAction = {
+						disableRuleComment = {
+							enable = true,
+							location = 'separateLine',
+						},
+						showDocumentation = {
+							enable = true,
+						},
+					},
+				},
+				before_init = function(_, config)
+					-- The "workspaceFolder" is a VSCode concept. It limits how far the
+					-- server will traverse the file system when locating the ESLint config
+					-- file (e.g., .eslintrc).
+					local root_dir = config.root_dir
+
+					if root_dir then
+						config.settings = config.settings or {}
+						config.settings.workspaceFolder = {
+							uri = root_dir,
+							name = vim.fn.fnamemodify(root_dir, ':t'),
+						}
+
+						-- Support flat config files
+						-- They contain 'config' in the file name
+						local flat_config_files = vim.tbl_filter(function(file)
+							return file:match('config')
+						end, eslint_config_files)
+
+						for _, file in ipairs(flat_config_files) do
+							local found_files = vim.fn.globpath(root_dir, file, true, true)
+
+							-- Filter out files inside node_modules
+							local filtered_files = {}
+							for _, found_file in ipairs(found_files) do
+								if string.find(found_file, '[/\\]node_modules[/\\]') == nil then
+									table.insert(filtered_files, found_file)
+								end
+							end
+
+							if #filtered_files > 0 then
+								config.settings.experimental = config.settings.experimental or {}
+								config.settings.experimental.useFlatConfig = true
+								break
+							end
+						end
+
+						-- Support Yarn2 (PnP) projects
+						local pnp_cjs = root_dir .. '/.pnp.cjs'
+						local pnp_js = root_dir .. '/.pnp.js'
+						if type(config.cmd) == 'table' and (vim.uv.fs_stat(pnp_cjs) or vim.uv.fs_stat(pnp_js)) then
+							config.cmd = vim.list_extend({ 'yarn', 'exec' }, config.cmd --[[@as table]])
+						end
+					end
+				end,
+				handlers = {
+					['eslint/openDoc'] = function(_, result)
+						if result then
+							vim.ui.open(result.url)
+						end
+						return {}
+					end,
+					['eslint/confirmESLintExecution'] = function(_, result)
+						if not result then
+							return
+						end
+						return 4 -- approved
+					end,
+					['eslint/probeFailed'] = function()
+						vim.notify('[lspconfig] ESLint probe failed.', vim.log.levels.WARN)
+						return {}
+					end,
+					['eslint/noLibrary'] = function()
+						vim.notify('[lspconfig] Unable to find ESLint library.', vim.log.levels.WARN)
+						return {}
+					end,
+				},
+			})
 		end,
+
 	},
 	{
 		"lervag/vimtex",
