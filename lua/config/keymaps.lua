@@ -17,3 +17,6 @@ map('n', '<leader>qq', ':q<CR>', { noremap = true, silent = true })
 map('n', '<leader>qd', ':q!<CR>', { noremap = true, silent = true })
 map('n', '<leader>cc', ':nohl<CR>', { noremap = true, silent = true })
 map('n', '<leader>qa', ':qa<CR>', { noremap = true, silent = true })
+
+-- Disable macro recording
+map('n', 'q', '<nop>', { noremap = true, silent = true })
