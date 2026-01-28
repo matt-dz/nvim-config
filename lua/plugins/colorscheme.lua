@@ -9,5 +9,8 @@ return {
 		config = function()
 			vim.cmd.colorscheme("cyberdream")
 		end,
+		keys = {
+			{ "<leader>tt", "<cmd>CyberdreamToggleMode<cr>", desc = "Toggle light/dark mode" },
+		},
 	}
 }
