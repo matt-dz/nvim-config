@@ -57,9 +57,7 @@ return {
 			{
 				"<leader>gH",
 				function()
-					local remote = vim.fn.system("git remote get-url origin"):gsub("%s+$", "")
-					local url = remote:gsub("git@github.com:", "https://github.com/"):gsub("%.git$", "")
-					vim.ui.open(url)
+					Snacks.gitbrowse({ what = "repo" })
 				end,
 				desc = "Open repo home",
 			},
