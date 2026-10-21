@@ -63,21 +63,21 @@ return {
 			win = {
 				list = {
 					keys = {
-						["<BS>"] = "explorer_up",
-						["l"] = "confirm",
-						["h"] = "explorer_close", -- close directory
-						["a"] = "explorer_add",
-						["d"] = "explorer_del",
-						["r"] = "explorer_rename",
-						["c"] = "explorer_copy",
-						["m"] = "explorer_move",
-						["o"] = "explorer_open", -- open with system application
+						["<BS>"] = { "explorer_up", desc = "Go to parent directory" },
+						["l"] = { "confirm", desc = "Open file or toggle directory" },
+						["h"] = { "explorer_close", desc = "Collapse directory" },
+						["a"] = { "explorer_add", desc = "Create file or directory" },
+						["d"] = { "explorer_del", desc = "Delete files or directories" },
+						["r"] = { "explorer_rename", desc = "Rename file or directory" },
+						["c"] = { "explorer_copy", desc = "Copy files or directories" },
+						["m"] = { "explorer_move", desc = "Move files or directories" },
+						["o"] = { "explorer_open", desc = "Open with system application" },
 					},
 				},
 			},
 			config = function(opts)
 				local keymap = vim.keymap
-				keymap.set("n", "<leader>ee", function() Snacks.explorer.open() end, { desc = "Toggle Explorer" })
+				keymap.set("n", "<leader>ee", function() Snacks.explorer.open() end, { desc = "Open file explorer" })
 				return require("snacks.picker.source.explorer").setup(opts)
 			end,
 		},

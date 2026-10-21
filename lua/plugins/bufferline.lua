@@ -3,11 +3,11 @@ return {
 	dependencies = 'nvim-tree/nvim-web-devicons',
 	event = "VeryLazy",
 	keys = {
-		{ "<leader>br", "<Cmd>BufferLineCloseRight<CR>", desc = "Delete Buffers to the Right" },
-		{ "<leader>bl", "<Cmd>BufferLineCloseLeft<CR>",  desc = "Delete Buffers to the Left" },
-		{ "<leader>bb", ":bd<CR>",                       desc = "Delete Current Buffer" },
-		{ "<S-h>",      "<Cmd>BufferLineCyclePrev<CR>",  desc = "Prev Buffer" },
-		{ "<S-l>",      "<Cmd>BufferLineCycleNext<CR>",  desc = "Next Buffer" },
+		{ "<leader>br", "<Cmd>BufferLineCloseRight<CR>", desc = "Close buffers to the right" },
+		{ "<leader>bl", "<Cmd>BufferLineCloseLeft<CR>",  desc = "Close buffers to the left" },
+		{ "<leader>bb", ":bd<CR>",                       desc = "Close current buffer" },
+		{ "<S-h>",      "<Cmd>BufferLineCyclePrev<CR>",  desc = "Previous buffer" },
+		{ "<S-l>",      "<Cmd>BufferLineCycleNext<CR>",  desc = "Next buffer" },
 	},
 	opts = {
 		options = {

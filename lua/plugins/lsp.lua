@@ -101,25 +101,25 @@ return {
 				opts.buffer = bufnr
 
 				-- set keybinds
-				opts.desc = "Show LSP references"
+				opts.desc = "Find symbol references"
 				keymap.set("n", "gR", vim.lsp.buf.references, opts) -- show definition, references
 
 				opts.desc = "Go to declaration"
 				keymap.set("n", "gD", vim.lsp.buf.declaration, opts) -- go to declaration
 
-				opts.desc = "Show LSP definitions"
+				opts.desc = "Go to definition"
 				keymap.set("n", "gd", vim.lsp.buf.definition, opts) -- show lsp definitions
 
-				opts.desc = "Show LSP implementations"
+				opts.desc = "Go to implementation"
 				keymap.set("n", "gi", vim.lsp.buf.implementation, opts) -- show lsp implementations
 
-				opts.desc = "Show LSP type definitions"
+				opts.desc = "Go to type definition"
 				keymap.set("n", "gt", vim.lsp.buf.type_definition, opts) -- show lsp type definitions
 
-				opts.desc = "See available code actions"
+				opts.desc = "Show code actions"
 				keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
 
-				opts.desc = "Smart rename"
+				opts.desc = "Rename symbol"
 				keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts) -- smart rename
 
 				opts.desc = "Show buffer diagnostics"
@@ -134,10 +134,10 @@ return {
 				opts.desc = "Go to next diagnostic"
 				keymap.set("n", "]d", vim.diagnostic.goto_next, opts) -- jump to next diagnostic in buffer
 
-				opts.desc = "Show documentation for what is under cursor"
+				opts.desc = "Show hover documentation"
 				keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
 
-				opts.desc = "Restart LSP"
+				opts.desc = "Restart language servers"
 				keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
 			end
 
