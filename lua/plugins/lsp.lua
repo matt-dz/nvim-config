@@ -279,7 +279,7 @@ return {
 				on_attach = on_attach,
 			})
 
-			vim.lsp.config("gopls", {
+			local gopls = vim.tbl_deep_extend("force", vim.lsp.config.gopls, {
 				capabilities = capabilities,
 				on_attach = on_attach,
 				settings = {
@@ -289,10 +289,10 @@ return {
 						},
 						staticcheck = true,
 						gofumpt = true,
-
-					}
-				}
+					},
+				},
 			})
+			vim.lsp.config("gopls", require("config.go_projects").setup(gopls))
 
 			vim.lsp.config("rust_analyzer", {
 				capabilities = capabilities,
