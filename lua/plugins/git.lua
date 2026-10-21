@@ -24,8 +24,8 @@ return {
 				end
 
 				-- Navigation
-				map("n", "]h", gs.next_hunk, "Next hunk")
-				map("n", "[h", gs.prev_hunk, "Previous hunk")
+				map("n", "]h", function() gs.nav_hunk("next") end, "Next hunk")
+				map("n", "[h", function() gs.nav_hunk("prev") end, "Previous hunk")
 
 				-- Actions
 				map("n", "<leader>hs", gs.stage_hunk, "Stage hunk")
@@ -41,7 +41,7 @@ return {
 				map("n", "<leader>tb", gs.toggle_current_line_blame, "Toggle line blame")
 				map("n", "<leader>hd", gs.diffthis, "Diff this")
 				map("n", "<leader>hD", function() gs.diffthis("~") end, "Diff this ~")
-				map("n", "<leader>td", gs.toggle_deleted, "Toggle deleted")
+				map("n", "<leader>td", gs.preview_hunk_inline, "Preview hunk inline")
 
 				-- Text object
 				map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", "Select hunk")
